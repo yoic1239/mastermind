@@ -1,53 +1,12 @@
 # frozen_string_literal: true
 
-# Color options available in the game
-class Color
-  @@color = %w[blue red green yellow black white]
-
-  def self.colors
-    @@color.map { |color| color[0].upcase + color[1..] }.join(' / ')
-  end
-
-  def self.random
-    @@color[rand(@@color.length)]
-  end
-
-  def self.secret_color
-    secret_color = []
-    4.times do
-      secret_color.push(random)
-    end
-    secret_color
-  end
-
-  def self.valid_color?(color)
-    @@color.include?(color)
-  end
-end
-
-# Allow player to choose their row
-class Player
-  attr_reader :role
-
-  def initialize
-    @role = choose_role
-  end
-
-  def choose_role
-    role = ''
-    loop do
-      puts 'Which role would you like to play? Enter "1" for Guesser and "2" for Creator'
-      role = gets.chomp.strip
-      break if %w[1 2].include?(role)
-
-      puts 'Invalid input. Please try again.'
-    end
-    role = role == '1' ? 'guesser' : 'creator'
-  end
-end
+require './color'
+require './player'
 
 # Computer will select the secret colors for player to guess it
 class Game
+  include Color
+
   MAX_TURNS = 12
   def initialize
     @player = Player.new
@@ -119,7 +78,7 @@ class Game
   def show_input_remark(guess_mode)
     print "Enter #{guess_mode ? 'your guess' : 'the secret colors'} "
     puts '(Leave space between each color, e.g. "Black Yellow Red Blue")'
-    puts "Color options: #{Color.colors}"
+    puts "Color options: #{display_options}"
   end
 
   def valid_input?(guess_mode)
