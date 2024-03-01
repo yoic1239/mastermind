@@ -27,29 +27,35 @@ class Game
   def play_guesser
     @secret_color = Color.secret_color
     (1..MAX_TURNS).each do |round_num|
-      display_layout(round_num, true)
-      break if correct_guess?
+      display_layout(round_num)
+      break if bingo?
     end
-    puts result(true)
+    puts result
   end
 
   def play_creator
-    show_input_remark(false)
-    enter_colors(false)
+    show_input_remark
+    @secret_color = enter_colors
     (1..MAX_TURNS).each do |round_num|
-      display_layout(round_num, false)
-      break if correct_guess?
+      display_layout(round_num)
+      break if bingo?
     end
-    puts result(false)
+    puts result
   end
 
-  def display_layout(round_num, guess_mode)
+  def show_input_remark
+    print "Enter #{@player.role == 'guesser' ? 'your guess' : 'the secret colors'} "
+    puts '(Leave space between each color, e.g. "Black Yellow Red Blue")'
+    puts "Color options: #{display_options}"
+  end
+
+  def display_layout(round_num)
     puts '------------------------------------------------------------------------------------'
     puts "[Round #{round_num}]"
 
-    if guess_mode
-      show_input_remark(guess_mode)
-      enter_colors(guess_mode)
+    if @player.role == 'guesser'
+      show_input_remark
+      @guess = enter_colors
     else
       com_guess
     end
@@ -58,15 +64,11 @@ class Game
     puts feedback
   end
 
-  def enter_colors(guess_mode)
+  def enter_colors
     loop do
       print '> '
-      if guess_mode
-        @guess = gets.chomp.split.map! { |color| color.strip.downcase }
-      else
-        @secret_color = gets.chomp.split.map! { |color| color.strip.downcase }
-      end
-      break if valid_input?(guess_mode)
+      inputted_colors = gets.chomp.split.map! { |color| color.strip.downcase }
+      return inputted_colors if valid_input?(inputted_colors)
     end
   end
 
@@ -75,15 +77,8 @@ class Game
     puts "Computer guess: #{@guess.join(' ')}"
   end
 
-  def show_input_remark(guess_mode)
-    print "Enter #{guess_mode ? 'your guess' : 'the secret colors'} "
-    puts '(Leave space between each color, e.g. "Black Yellow Red Blue")'
-    puts "Color options: #{display_options}"
-  end
-
-  def valid_input?(guess_mode)
-    check_var = guess_mode ? @guess : @secret_color
-    validity = check_var.length == 4 && check_var.all? { |color| Color.valid_color?(color) }
+  def valid_input?(inputted_colors)
+    validity = inputted_colors.length == 4 && inputted_colors.all? { |color| Color.valid_color?(color) }
     puts 'Invalid input. Please try again' unless validity
     validity
   end
@@ -110,15 +105,15 @@ class Game
     same_color - correct_position
   end
 
-  def correct_guess?
+  def bingo?
     correct_position == 4
   end
 
-  def result(guess_mode)
-    if guess_mode
-      correct_guess? ? 'Congrat! You got the correct answer!' : "Oops! You can't get the secret color."
+  def result
+    if @player.role == 'guesser'
+      bingo? ? 'Congrat! You got the correct answer!' : "You lose! The secret color is #{@secret_color.join(', ')}."
     else
-      correct_guess? ? 'Computer got the correct answer!' : "Oops! Computer can't get the secret color."
+      bingo? ? 'Computer got the correct answer!' : "Oops! Computer can't get the secret color."
     end
   end
 end
