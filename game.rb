@@ -2,6 +2,8 @@
 
 require './color'
 require './player'
+require './guess_pool'
+require './compare_color'
 
 # Computer will select the secret colors for player to guess it
 class Game
@@ -10,8 +12,6 @@ class Game
   MAX_TURNS = 12
   def initialize
     @player = Player.new
-    @secret_color = []
-    @guess = []
   end
 
   def play
@@ -34,6 +34,7 @@ class Game
   end
 
   def play_creator
+    @pool = GuessPool.new
     show_input_remark
     @secret_color = enter_colors
     (1..MAX_TURNS).each do |round_num|
@@ -73,8 +74,11 @@ class Game
   end
 
   def com_guess
-    @guess = Color.secret_color
+    @guess = @pool.random_guess
     puts "Computer guess: #{@guess.join(' ')}"
+
+    @pool.add_guess(@guess, correct_position, correct_color)
+    @pool.update
   end
 
   def valid_input?(inputted_colors)
@@ -88,21 +92,11 @@ class Game
   end
 
   def correct_position
-    same_position = 0
-    @secret_color.each_with_index do |color, index|
-      same_position += 1 if color == @guess[index]
-    end
-    same_position
+    CompareColor.same_position(@guess, @secret_color)
   end
 
   def correct_color
-    same_color = 0
-    @secret_color.tally.each do |color, count|
-      if @guess.tally.key?(color)
-        same_color += @guess.tally[color] <= count ? @guess.tally[color] : count
-      end
-    end
-    same_color - correct_position
+    CompareColor.same_color(@guess, @secret_color) - correct_position
   end
 
   def bingo?
@@ -117,3 +111,6 @@ class Game
     end
   end
 end
+
+game = Game.new
+game.play

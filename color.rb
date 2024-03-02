@@ -27,4 +27,11 @@ module Color
   def self.valid_color?(color)
     @@color.include?(color)
   end
+
+  def self.colors_by_num(num)
+    num_set = num.to_s.split('').map(&:to_i)
+    return [] unless num.between?(1111, 6666) && num_set.all? { |digit| digit.between?(1, 6) }
+
+    num_set.map { |digit| @@color[digit - 1] }
+  end
 end
